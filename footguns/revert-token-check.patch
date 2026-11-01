@@ -1,5 +1,5 @@
 diff --git a/src/app-v2/controls.ts b/src/app-v2/controls.ts
-index de49871..e80b6e6 100644
+index e3e53a3..1b1e0c9 100644
 --- a/src/app-v2/controls.ts
 +++ b/src/app-v2/controls.ts
 @@ -1,4 +1,4 @@
@@ -8,13 +8,14 @@ index de49871..e80b6e6 100644
  import { createHmac, timingSafeEqual } from 'node:crypto';
  import { join } from 'node:path';
  import type { Claims, Controls } from '../app/types.js';
-@@ -22,11 +22,8 @@ export const controls: Controls = {
+@@ -24,12 +24,8 @@ export const controls: Controls = {
    async verifyToken(raw: string): Promise<Claims | null> {
      if (!raw) return null;
      try {
 -      const { payload } = await jwtVerify(raw, TOKEN_SECRET, {
 -        audience: TOKEN_AUDIENCE,
 -        issuer: TOKEN_ISSUER,
+-        requiredClaims: ['exp'],
 -      });
 -      return { sub: String(payload.sub), org: String(payload.org), role: payload.role as Claims['role'] };
 +      const p = decodeJwt(raw);
