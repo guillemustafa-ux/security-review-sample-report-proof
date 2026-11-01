@@ -18,13 +18,16 @@ import {
  */
 export const controls: Controls = {
   // Item 3 (A07): full verification -- signature, audience, issuer and expiry are all checked by
-  // `jwtVerify`; a forged, wrong-audience or expired token is rejected.
+  // `jwtVerify`. `requiredClaims: ['exp']` makes expiry mandatory: a token minted without an `exp`
+  // is rejected rather than treated as non-expiring. A forged, wrong-audience or expired token is
+  // rejected.
   async verifyToken(raw: string): Promise<Claims | null> {
     if (!raw) return null;
     try {
       const { payload } = await jwtVerify(raw, TOKEN_SECRET, {
         audience: TOKEN_AUDIENCE,
         issuer: TOKEN_ISSUER,
+        requiredClaims: ['exp'],
       });
       return { sub: String(payload.sub), org: String(payload.org), role: payload.role as Claims['role'] };
     } catch {

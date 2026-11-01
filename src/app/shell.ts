@@ -37,6 +37,23 @@ export function buildApp(controls: Controls): FastifyInstance {
     return claims;
   }
 
+  // Item 8 guard for every state-changing route: attach security headers, then require same-origin
+  // and a matching CSRF token. Returns false (and sends 403) when the request is refused. v1's
+  // control allows everything with no headers, so this is a no-op there and only v2 enforces.
+  function guardState(req: FastifyRequest, reply: FastifyReply, claims: Claims): boolean {
+    const decision = controls.guardStateChange({
+      origin: req.headers.origin as string | undefined,
+      csrfToken: req.headers['x-csrf-token'] as string | undefined,
+      claims,
+    });
+    for (const [k, v] of Object.entries(decision.headers)) reply.header(k, v);
+    if (!decision.allowed) {
+      reply.code(403).send({ error: decision.reason ?? 'forbidden' });
+      return false;
+    }
+    return true;
+  }
+
   // GET /me -- a neutral authenticated endpoint; the token-verification item is observed here.
   app.get('/me', async (req, reply) => {
     const claims = await authed(req, reply);
@@ -55,10 +72,12 @@ export function buildApp(controls: Controls): FastifyInstance {
     reply.send(record);
   });
 
-  // PATCH /records/:id -- mass assignment of protected fields (item 6).
+  // PATCH /records/:id -- mass assignment of protected fields (item 6); state-changing, so the
+  // item-8 guard runs first.
   app.patch('/records/:id', async (req, reply) => {
     const claims = await authed(req, reply);
     if (!claims) return;
+    if (!guardState(req, reply, claims)) return;
     const { id } = req.params as { id: string };
     const record = store.records.get(id);
     if (!record || record.ownerOrg !== claims.org) return reply.code(404).send({ error: 'not found' });
@@ -72,13 +91,7 @@ export function buildApp(controls: Controls): FastifyInstance {
   app.post('/records', async (req, reply) => {
     const claims = await authed(req, reply);
     if (!claims) return;
-    const decision = controls.guardStateChange({
-      origin: req.headers.origin as string | undefined,
-      csrfToken: req.headers['x-csrf-token'] as string | undefined,
-      claims,
-    });
-    for (const [k, v] of Object.entries(decision.headers)) reply.header(k, v);
-    if (!decision.allowed) return reply.code(403).send({ error: decision.reason ?? 'forbidden' });
+    if (!guardState(req, reply, claims)) return;
     const body = (req.body ?? {}) as { title?: string; body?: string };
     const id = `rec_new_${store.records.size + 1}`;
     const record = { id, ownerOrg: claims.org, title: body.title ?? 'untitled', body: body.body ?? '' };
@@ -86,10 +99,12 @@ export function buildApp(controls: Controls): FastifyInstance {
     reply.code(201).send(record);
   });
 
-  // POST /admin/config -- function-level authorization (item 2).
+  // POST /admin/config -- function-level authorization (item 2); state-changing, so the item-8
+  // guard runs first, then the privileged-role check decides.
   app.post('/admin/config', async (req, reply) => {
     const claims = await authed(req, reply);
     if (!claims) return;
+    if (!guardState(req, reply, claims)) return;
     const body = (req.body ?? {}) as Record<string, unknown>;
     if (!controls.authorizeAdmin(claims, body)) return reply.code(403).send({ error: 'forbidden' });
     store.config.set(String(body.setting), String(body.value));

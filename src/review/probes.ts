@@ -1,9 +1,9 @@
 import type { FastifyInstance } from 'fastify';
 import { buildV1 } from '../app-v1/index.js';
 import { buildV2 } from '../app-v2/index.js';
-import { issueToken, forgeToken, signWebhook } from '../app/tokens.js';
+import { issueToken, forgeToken, signWebhook, csrfToken } from '../app/tokens.js';
 import { USERS, INJECTION_MARKER } from '../app/seed.js';
-import { ORG_A, ORG_B } from '../app/config.js';
+import { ORG_A, ORG_B, ALLOWED_ORIGIN } from '../app/config.js';
 
 export type Version = 'v1' | 'v2';
 
@@ -47,7 +47,8 @@ export const PROBES: Record<string, Probe> = {
     }
   },
 
-  // Item 2: a member posts to the admin route while asserting role "admin" in the body.
+  // Item 2: a member posts to the admin route while asserting role "admin" in the body. Same-origin
+  // and a valid CSRF token are sent so the item-8 guard passes and only the role check decides.
   'function-auth': async (version) => {
     const app = build(version);
     try {
@@ -55,7 +56,11 @@ export const PROBES: Record<string, Probe> = {
       const res = await app.inject({
         method: 'POST',
         url: '/admin/config',
-        headers: { authorization: `Bearer ${token}` },
+        headers: {
+          authorization: `Bearer ${token}`,
+          origin: ALLOWED_ORIGIN,
+          'x-csrf-token': csrfToken(USERS.aliceMemberA.sub),
+        },
         payload: { setting: 'theme', value: 'dark', role: 'admin' },
       });
       const open = res.statusCode === 200;
@@ -142,7 +147,8 @@ export const PROBES: Record<string, Probe> = {
     }
   },
 
-  // Item 6: the update body carries ownerOrg to move the record to another tenant.
+  // Item 6: the update body carries ownerOrg to move the record to another tenant. Same-origin and a
+  // valid CSRF token are sent so the item-8 guard passes and only the field allowlist decides.
   'field-allowlist': async (version) => {
     const app = build(version);
     try {
@@ -150,7 +156,11 @@ export const PROBES: Record<string, Probe> = {
       const res = await app.inject({
         method: 'PATCH',
         url: '/records/rec_nw_1',
-        headers: { authorization: `Bearer ${token}` },
+        headers: {
+          authorization: `Bearer ${token}`,
+          origin: ALLOWED_ORIGIN,
+          'x-csrf-token': csrfToken(USERS.aliceMemberA.sub),
+        },
         payload: { ownerOrg: ORG_B },
       });
       const body = res.statusCode === 200 ? (res.json() as { ownerOrg?: string }) : {};

@@ -77,6 +77,10 @@ above are quoted, the assignment of a given handler to a category is this repo's
 - On comparison: "Never use a plain `==` operator." Use a constant-time comparison such as
   `secure_compare` or `crypto.timingSafeEqual`.
 
-v2's `verifyWebhook` follows this shape: HMAC-SHA256 over `${timestamp}.${body}` with a secret,
-compared with `crypto.timingSafeEqual`, plus a replay window on the timestamp. The window bound
-(300 s) is this repo's own choice, not quoted from GitHub.
+v2's `verifyWebhook` follows this shape: HMAC-SHA256 with a secret, compared with
+`crypto.timingSafeEqual`. Note the scope: the GitHub page above signs the payload only. Signing
+`${timestamp}.${body}` and enforcing a replay window is a Stripe-style scheme, not GitHub's; it is
+this repo's own choice and is **not verified** against the GitHub page (compare Stripe's documented
+`t=<timestamp>,v1=<signature>` construction). The window bound (300 s) is likewise this repo's own
+choice. The signed string bounds replays by timestamp; it does not deduplicate, so an identical
+replay inside the window is still accepted.
