@@ -1,0 +1,17 @@
+diff --git a/src/app-v2/controls.ts b/src/app-v2/controls.ts
+index de49871..a37b9a3 100644
+--- a/src/app-v2/controls.ts
++++ b/src/app-v2/controls.ts
+@@ -65,11 +65,7 @@ export const controls: Controls = {
+ 
+   // Item 6 (A08): allowlist the writable fields; any other key rejects the whole update.
+   vetUpdate(body: Record<string, unknown>): Record<string, unknown> | null {
+-    const allowed = ['title', 'body'];
+-    if (Object.keys(body).some((k) => !allowed.includes(k))) return null;
+-    const patch: Record<string, unknown> = {};
+-    for (const key of allowed) if (key in body) patch[key] = body[key];
+-    return patch;
++    return body;
+   },
+ 
+   // Item 7 (A03): keep the untrusted record body in the data channel, separate from the

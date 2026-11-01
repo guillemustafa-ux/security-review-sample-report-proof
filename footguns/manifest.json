@@ -1,0 +1,34 @@
+{
+  "revert-object-auth": {
+    "description": "v2 canReadRecord returns true again: any tenant can read any record by id.",
+    "expectedFailures": ["(b1)", "(d2)"]
+  },
+  "revert-function-auth": {
+    "description": "v2 authorizeAdmin trusts the client-supplied body role instead of the verified token role.",
+    "expectedFailures": ["(b2)", "(d2)"]
+  },
+  "revert-token-check": {
+    "description": "v2 verifyToken only decodes the token (decodeJwt), skipping signature, audience and expiry.",
+    "expectedFailures": ["(b3)", "(d2)"]
+  },
+  "revert-webhook-verify": {
+    "description": "v2 verifyWebhook returns true: the webhook is acted on with no signature or replay check.",
+    "expectedFailures": ["(b4)", "(d2)"]
+  },
+  "revert-path-confine": {
+    "description": "v2 resolveFilePath drops the normalization/confinement guard, so ../ escapes again.",
+    "expectedFailures": ["(b5)", "(d2)"]
+  },
+  "revert-field-allowlist": {
+    "description": "v2 vetUpdate returns the whole body, so a protected field can be mass-assigned.",
+    "expectedFailures": ["(b6)", "(d2)"]
+  },
+  "revert-prompt-separation": {
+    "description": "v2 buildPrompt folds the untrusted record body back into the instruction channel.",
+    "expectedFailures": ["(b7)", "(e)", "(d2)"]
+  },
+  "revert-headers": {
+    "description": "v2 guardStateChange allows every state change with no headers, CSRF or same-origin check.",
+    "expectedFailures": ["(b8)", "(d2)"]
+  }
+}

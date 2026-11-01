@@ -1,0 +1,24 @@
+diff --git a/src/app-v2/controls.ts b/src/app-v2/controls.ts
+index de49871..e80b6e6 100644
+--- a/src/app-v2/controls.ts
++++ b/src/app-v2/controls.ts
+@@ -1,4 +1,4 @@
+-import { jwtVerify } from 'jose';
++import { jwtVerify, decodeJwt } from 'jose';
+ import { createHmac, timingSafeEqual } from 'node:crypto';
+ import { join } from 'node:path';
+ import type { Claims, Controls } from '../app/types.js';
+@@ -22,11 +22,8 @@ export const controls: Controls = {
+   async verifyToken(raw: string): Promise<Claims | null> {
+     if (!raw) return null;
+     try {
+-      const { payload } = await jwtVerify(raw, TOKEN_SECRET, {
+-        audience: TOKEN_AUDIENCE,
+-        issuer: TOKEN_ISSUER,
+-      });
+-      return { sub: String(payload.sub), org: String(payload.org), role: payload.role as Claims['role'] };
++      const p = decodeJwt(raw);
++      return { sub: String(p.sub), org: String(p.org), role: p.role as Claims['role'] };
+     } catch {
+       return null;
+     }

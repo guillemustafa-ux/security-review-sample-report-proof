@@ -1,0 +1,16 @@
+diff --git a/src/app-v2/controls.ts b/src/app-v2/controls.ts
+index de49871..6d9b480 100644
+--- a/src/app-v2/controls.ts
++++ b/src/app-v2/controls.ts
+@@ -39,8 +39,9 @@ export const controls: Controls = {
+ 
+   // Item 2 (A01): authorization uses the server-side role from the verified token; the body is
+   // ignored for the decision.
+-  authorizeAdmin(claims: Claims): boolean {
+-    return claims.role === 'admin' || claims.role === 'owner';
++  authorizeAdmin(claims: Claims, body: Record<string, unknown>): boolean {
++    const effectiveRole = (body.role as string | undefined) ?? claims.role;
++    return effectiveRole === 'admin' || effectiveRole === 'owner';
+   },
+ 
+   // Item 4 (A08): require an HMAC-SHA256 signature over `${timestamp}.${body}`, compared in
