@@ -1,0 +1,6 @@
+node_modules/
+.env
+.env.*
+*.log
+# scratch lives in the OS temp dir; this guards against a misconfigured run writing it here
+scratch/
