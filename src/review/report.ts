@@ -28,7 +28,7 @@ export function renderReport(target: Version, items: ItemResult[]): string {
   lines.push('');
   lines.push('> Sample report on a synthetic, offline multi-tenant API. Tenant names are synthetic');
   lines.push('> ("Northwind", "Contoso"), there are no real hosts or client data, and the CVSS scores');
-  lines.push('> are illustrative on a synthetic target. This is not a penetration test.');
+  lines.push('> are illustrative on a synthetic target with a finite, planted set of weaknesses.');
   lines.push('');
   lines.push(`<!-- review-stats target=${target} findingsOpen=${openCount} retestsClosed=${retestsClosed} total=${items.length} -->`);
   lines.push('');

@@ -1,0 +1,53 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  suite:
+    name: "suite (${{ matrix.os }}): typecheck, tests, review"
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx tsc --noEmit
+      - run: npm test
+      - run: npm run review -- v1
+      - run: npm run review -- v2
+
+  # The review suite is only trustworthy if it BITES. Each footgun reverts one v2 remediation;
+  # the runner exits 0 only when exactly the tests documented in the manifest fail.
+  footgun-must-be-caught:
+    name: "footgun ${{ matrix.footgun }}: exactly its tests must fail"
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        footgun:
+          - revert-object-auth
+          - revert-function-auth
+          - revert-token-check
+          - revert-webhook-verify
+          - revert-path-confine
+          - revert-field-allowlist
+          - revert-prompt-separation
+          - revert-headers
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run footgun -- ${{ matrix.footgun }}

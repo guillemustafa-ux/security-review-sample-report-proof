@@ -2,7 +2,7 @@
 
 > Sample report on a synthetic, offline multi-tenant API. Tenant names are synthetic
 > ("Northwind", "Contoso"), there are no real hosts or client data, and the CVSS scores
-> are illustrative on a synthetic target. This is not a penetration test.
+> are illustrative on a synthetic target with a finite, planted set of weaknesses.
 
 <!-- review-stats target=v1 findingsOpen=8 retestsClosed=8 total=8 -->
 
